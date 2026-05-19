@@ -133,9 +133,13 @@ class QModelSubmenu(QModelMenu):
         super().__init__(
             menu_id=submenu.submenu, app=app, title=submenu.title, parent=parent
         )
-        if submenu.icon:
+        self._update_icon()
+        self._app.theme_mode_changed.connect(self._update_icon)
+
+    def _update_icon(self) -> None:
+        if self._submenu.icon:
             self.setIcon(
-                to_qicon(submenu.icon, theme=self._app.theme_mode, parent=self)
+                to_qicon(self._submenu.icon, theme=self._app.theme_mode, parent=self)
             )
 
     def update_from_context(self, ctx: Mapping[str, object]) -> None:

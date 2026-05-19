@@ -4,7 +4,6 @@ import contextlib
 from typing import TYPE_CHECKING, ClassVar
 from weakref import WeakValueDictionary
 
-from qtpy.QtCore import QEvent
 from qtpy.QtGui import QKeySequence
 
 from app_model import Application
@@ -23,7 +22,7 @@ if TYPE_CHECKING:
 
     from app_model.types import CommandRule, MenuItem
 else:
-    from qtpy.QtWidgets import QAction, QApplication
+    from qtpy.QtWidgets import QAction
 
 
 class QCommandAction(QAction):
@@ -101,8 +100,7 @@ class QCommandRuleAction(QCommandAction):
             self.setText(command_rule.short_title)  # pragma: no cover
         else:
             self.setText(command_rule.title)
-        self._update_icon_theme()
-        QApplication.instance().installEventFilter(self)
+        self._update_icon()
         self.setIconVisibleInMenu(self._cmd_rule.icon_visible_in_menu)
         if command_rule.status_tip:
             self.setStatusTip(command_rule.status_tip)
@@ -111,7 +109,7 @@ class QCommandRuleAction(QCommandAction):
             self._refresh()
         tooltip_with_keybinding = f"{self._tooltip} {self._keybinding_tooltip}".rstrip()
         self.setToolTip(tooltip_with_keybinding)
-        self._app.theme_mode_changed.connect(self._update_icon_theme)
+        self._app.theme_mode_changed.connect(self._update_icon)
 
     def setText(self, text: str | None) -> None:
         super().setText(text)
@@ -122,7 +120,7 @@ class QCommandRuleAction(QCommandAction):
         tooltip_with_keybinding = f"{self._tooltip} {self._keybinding_tooltip}".rstrip()
         self.setToolTip(tooltip_with_keybinding)
 
-    def _update_icon_theme(self) -> None:
+    def _update_icon(self) -> None:
         if self._cmd_rule.icon:
             self.setIcon(
                 to_qicon(self._cmd_rule.icon, theme=self._app.theme_mode, parent=self)
@@ -144,15 +142,6 @@ class QCommandRuleAction(QCommandAction):
                     get_current, on_unresolved_required_args="ignore"
                 )
                 self.setChecked(_current())
-
-    def eventFilter(self, obj, a0) -> bool:
-        if a0 is not None and a0.type() in (
-            QEvent.Type.ApplicationPaletteChange,
-            QEvent.Type.PaletteChange,
-            QEvent.Type.StyleChange,
-        ):
-            self._update_icon_theme()
-        return False
 
 
 class QMenuItemAction(QCommandRuleAction):
