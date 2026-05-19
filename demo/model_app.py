@@ -163,12 +163,12 @@ class MainWindow(QModelMainWindow):
         palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
         palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
 
-        palette.setColor(QPalette.ColorRole.WindowText, Qt.white)
-        palette.setColor(QPalette.ColorRole.Text, Qt.white)
-        palette.setColor(QPalette.ColorRole.ButtonText, Qt.white)
+        palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+        palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
 
         palette.setColor(QPalette.ColorRole.Highlight, QColor(80, 80, 80))
-        palette.setColor(QPalette.ColorRole.HighlightedText, Qt.white)
+        palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.white)
         QApplication.setPalette(palette)
 
     def switch_theme_mode(self) -> None:
@@ -176,7 +176,8 @@ class MainWindow(QModelMainWindow):
         current = modes.index(self._app.theme_mode)
         next_theme = modes[(current + 1) % 3]
         self._app.theme_mode = next_theme
-        self.statusBar().showMessage(f"Current app theme: {next_theme}")
+        if sb := self.statusBar():
+            sb.showMessage(f"Current app theme: {next_theme}")
 
 
 # Actions defined declaratively outside of QMainWindow class ...
