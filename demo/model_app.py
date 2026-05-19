@@ -150,7 +150,7 @@ class MainWindow(QModelMainWindow):
     def close(self) -> bool:
         return super().close()
 
-    def switch_theme(self) -> None:
+    def switch_palette(self) -> None:
         if getattr(self, "_old_palette", None):
             new_palette, self._old_palette = self._old_palette, QApplication.palette()
             QApplication.setPalette(new_palette)
@@ -160,19 +160,23 @@ class MainWindow(QModelMainWindow):
         self._old_palette = QApplication.palette()
 
         palette = QPalette()
-        palette.setColor(QPalette.Window, QColor(53, 53, 53))
-        palette.setColor(QPalette.Base, QColor(35, 35, 35))
+        palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+        palette.setColor(QPalette.ColorRole.Base, QColor(35, 35, 35))
 
-        palette.setColor(QPalette.WindowText, Qt.white)
-        palette.setColor(QPalette.Text, Qt.white)
-        palette.setColor(QPalette.ButtonText, Qt.white)
+        palette.setColor(QPalette.ColorRole.WindowText, Qt.white)
+        palette.setColor(QPalette.ColorRole.Text, Qt.white)
+        palette.setColor(QPalette.ColorRole.ButtonText, Qt.white)
 
-        palette.setColor(QPalette.Highlight, QColor(80, 80, 80))
-        palette.setColor(QPalette.HighlightedText, Qt.white)
+        palette.setColor(QPalette.ColorRole.Highlight, QColor(80, 80, 80))
+        palette.setColor(QPalette.ColorRole.HighlightedText, Qt.white)
         QApplication.setPalette(palette)
 
-    def switch_theme_model(self) -> None:
-        self._app.theme_mode = "light" if self._app.theme_mode == "dark" else "dark"
+    def switch_theme_mode(self) -> None:
+        modes = (None, "dark", "light")
+        current = modes.index(self._app.theme_mode)
+        next_theme = modes[(current + 1) % 3]
+        self._app.theme_mode = next_theme
+        self.statusBar().showMessage(f"Current app theme: {next_theme}")
 
 
 # Actions defined declaratively outside of QMainWindow class ...
@@ -278,28 +282,31 @@ ACTIONS: list[types.Action] = [
         callback=MainWindow.about,
     ),
     types.Action(
-        id="switch_theme",
-        icon={
-            "dark": "fa6-solid:circle-half-stroke",
-            "color_dark": "#ff0000",
-            "color_light": "#0000ff",
-        },
+        id="switch_palette",
+        icon="fa6-solid:palette",
         title="Switch dark/light theme",
-        status_tip="Switch between dark and light theme.",
+        status_tip=(
+            "Switch between dark and light Qt Palette. This affects "
+            "icons, unless a theme has been explicitly set on the application level."
+        ),
         menus=[{"id": MenuId.HELP}],
-        callback=MainWindow.switch_theme,
+        callback=MainWindow.switch_palette,
     ),
     types.Action(
-        id="switch_theme_model",
+        id="switch_theme_mode",
         icon={
-            "dark": "fa6-solid:circle-half-stroke",
+            "dark": "fa6-solid:sun",
+            "light": "fa6-solid:moon",
             "color_dark": "#ff0000",
             "color_light": "#0000ff",
         },
-        title="Switch dark/light theme",
-        status_tip="Switch between dark and light theme.",
+        title="Rotate between dark, light, and unset theme.",
+        status_tip=(
+            "Rotate between dark, light, and unset theme. This affects "
+            "theme icons and has precedence over the theming based on the QPalette."
+        ),
         menus=[{"id": MenuId.HELP}],
-        callback=MainWindow.switch_theme_model,
+        callback=MainWindow.switch_theme_mode,
     ),
 ]
 
