@@ -77,7 +77,6 @@ class ThemeEventFilter(QObject):
         self._app._theme_event_filter = self  # type: ignore[attr-defined]
 
     def eventFilter(self, a0: QObject | None, a1: QEvent | None) -> bool:
-        print(a0.__class__)
         if a1 is not None and a1.type() in (
             QEvent.Type.ApplicationPaletteChange,
             QEvent.Type.PaletteChange,
