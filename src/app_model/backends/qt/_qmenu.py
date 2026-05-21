@@ -10,7 +10,7 @@ from app_model import Application
 from app_model.types import SubmenuItem
 
 from ._qaction import QCommandRuleAction, QMenuItemAction
-from ._util import to_qicon
+from ._util import ThemeEventFilter, to_qicon
 
 if TYPE_CHECKING:
     from qtpy.QtWidgets import QAction, QWidget
@@ -135,6 +135,11 @@ class QModelSubmenu(QModelMenu):
         )
         self._update_icon()
         self._app.theme_mode_changed.connect(self._update_icon)
+        if (qapp := QApplication.instance()) and not hasattr(
+            self._app, "_theme_event_filter"
+        ):
+            event_filter = ThemeEventFilter(self._app)
+            qapp.installEventFilter(event_filter)
 
     def _update_icon(self) -> None:
         if self._submenu.icon:

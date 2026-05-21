@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import QEvent, Qt
-from qtpy.QtWidgets import QApplication, QMainWindow, QWidget
+from qtpy.QtCore import Qt
+from qtpy.QtWidgets import QMainWindow, QWidget
 
 from app_model import Application
 
@@ -12,8 +12,6 @@ from ._qmenu import QModelMenuBar, QModelToolBar
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
 
-    from qtpy.QtCore import QObject
-
 
 class QModelMainWindow(QMainWindow):
     """QMainWindow with app-model support."""
@@ -21,8 +19,6 @@ class QModelMainWindow(QMainWindow):
     def __init__(self, app: Application | str, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._app = Application.get_or_create(app) if isinstance(app, str) else app
-        if qapp := QApplication.instance():
-            qapp.installEventFilter(self)
 
     def setModelMenuBar(
         self, menu_ids: Mapping[str, str] | Sequence[str | tuple[str, str]]
@@ -54,12 +50,3 @@ class QModelMainWindow(QMainWindow):
         else:
             self.addToolBar(toolbar)
         return toolbar
-
-    def eventFilter(self, a0: QObject | None, a1: QEvent | None) -> bool:
-        if a1 is not None and a1.type() in (
-            QEvent.Type.ApplicationPaletteChange,
-            QEvent.Type.PaletteChange,
-            QEvent.Type.StyleChange,
-        ):
-            self._app.theme_mode_changed(self._app.theme_mode)
-        return False

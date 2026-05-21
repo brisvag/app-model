@@ -2,15 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import QUrl
+from qtpy.QtCore import QEvent, QObject, QUrl
 from qtpy.QtGui import QIcon, QPalette
 from qtpy.QtWidgets import QApplication
 
 if TYPE_CHECKING:
     from typing import Literal
 
-    from qtpy.QtCore import QObject
-
+    from app_model import Application
     from app_model.types import Icon
 
 
@@ -67,3 +66,22 @@ def to_qicon(
         else:
             return fonticon.icon(icn, color=color)
     return QIcon()  # pragma: no cover
+
+
+class ThemeEventFilter(QObject):
+    """Event filter triggering theme change on palette modification."""
+
+    def __init__(self, app: Application) -> None:
+        super().__init__()
+        self._app = app
+        self._app._theme_event_filter = self  # type: ignore[attr-defined]
+
+    def eventFilter(self, a0: QObject | None, a1: QEvent | None) -> bool:
+        print(a0.__class__)
+        if a1 is not None and a1.type() in (
+            QEvent.Type.ApplicationPaletteChange,
+            QEvent.Type.PaletteChange,
+            QEvent.Type.StyleChange,
+        ):
+            self._app.theme_mode_changed(self._app.theme_mode)
+        return False

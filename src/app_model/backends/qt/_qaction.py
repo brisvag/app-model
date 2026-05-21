@@ -5,13 +5,14 @@ from typing import TYPE_CHECKING, ClassVar
 from weakref import WeakValueDictionary
 
 from qtpy.QtGui import QKeySequence
+from qtpy.QtWidgets import QApplication
 
 from app_model import Application
 from app_model.expressions import Expr
 from app_model.types import ToggleRule
 
 from ._qkeymap import QKeyBindingSequence
-from ._util import to_qicon
+from ._util import ThemeEventFilter, to_qicon
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -110,6 +111,11 @@ class QCommandRuleAction(QCommandAction):
         tooltip_with_keybinding = f"{self._tooltip} {self._keybinding_tooltip}".rstrip()
         self.setToolTip(tooltip_with_keybinding)
         self._app.theme_mode_changed.connect(self._update_icon)
+        if (qapp := QApplication.instance()) and not hasattr(
+            self._app, "_theme_event_filter"
+        ):
+            event_filter = ThemeEventFilter(self._app)
+            qapp.installEventFilter(event_filter)
 
     def setText(self, text: str | None) -> None:
         super().setText(text)
