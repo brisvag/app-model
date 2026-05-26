@@ -44,7 +44,6 @@ def guess_theme_mode(
     theme: Literal["dark", "light", None] = None,
     parent: QObject | None = None,
 ) -> Literal["dark", "light"]:
-    print(theme, background_luma(parent))
     return theme or ("dark" if background_luma(parent) < 0.5 else "light")
 
 
