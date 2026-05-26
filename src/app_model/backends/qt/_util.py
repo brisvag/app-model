@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING
 
-from qtpy.QtCore import QEvent, QObject, QUrl
+from qtpy.QtCore import QEvent, QObject, QTimer, QUrl
 from qtpy.QtGui import QIcon, QPalette
 from qtpy.QtWidgets import QApplication
 
@@ -43,7 +44,8 @@ def guess_theme_mode(
     theme: Literal["dark", "light", None] = None,
     parent: QObject | None = None,
 ) -> Literal["dark", "light"]:
-    return theme or "dark" if background_luma(parent) < 0.5 else "light"
+    print(theme, background_luma(parent))
+    return theme or ("dark" if background_luma(parent) < 0.5 else "light")
 
 
 def to_qicon(
@@ -81,10 +83,19 @@ class ThemeEventFilter(QObject):
         self._app._theme_event_filter = self  # type: ignore[attr-defined]
 
     def eventFilter(self, a0: QObject | None, a1: QEvent | None) -> bool:
-        if a1 is not None and a1.type() in (
-            QEvent.Type.ApplicationPaletteChange,
-            QEvent.Type.PaletteChange,
-            QEvent.Type.StyleChange,
+        if (
+            a0 is QApplication.instance()
+            and a1 is not None
+            and a1.type()
+            in (
+                QEvent.Type.ApplicationPaletteChange,
+                QEvent.Type.PaletteChange,
+                QEvent.Type.StyleChange,
+            )
         ):
-            self._app.theme_mode_changed(self._app.theme_mode)
+            # delay firing slightly, so the colors can properly propagate via the
+            # palette change (otherwise our icons will detect the *old* color)
+            QTimer.singleShot(
+                1, partial(self._app.theme_mode_changed, self._app.theme_mode)
+            )
         return False
