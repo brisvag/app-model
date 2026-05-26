@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Literal
 from weakref import WeakValueDictionary
 
 from qtpy.QtGui import QKeySequence
@@ -12,7 +12,7 @@ from app_model.expressions import Expr
 from app_model.types import ToggleRule
 
 from ._qkeymap import QKeyBindingSequence
-from ._util import ThemeEventFilter, to_qicon
+from ._util import ThemeEventFilter, guess_theme_mode, to_qicon
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -97,6 +97,7 @@ class QCommandRuleAction(QCommandAction):
         super().__init__(command_rule.id, app, parent)
         self._cmd_rule = command_rule
         self._tooltip = command_rule.tooltip or ""
+        self._current_theme: Literal["dark", "light", None] = None
         if use_short_title and command_rule.short_title:
             self.setText(command_rule.short_title)  # pragma: no cover
         else:
@@ -128,9 +129,10 @@ class QCommandRuleAction(QCommandAction):
 
     def _update_icon(self) -> None:
         if self._cmd_rule.icon:
-            self.setIcon(
-                to_qicon(self._cmd_rule.icon, theme=self._app.theme_mode, parent=self)
-            )
+            theme = guess_theme_mode(theme=self._app.theme_mode, parent=self)
+            if theme != self._current_theme:
+                self.setIcon(to_qicon(self._cmd_rule.icon, theme=theme))
+                self._current_theme = theme
 
     def update_from_context(self, ctx: Mapping[str, object]) -> None:
         """Update the enabled state of this menu item from `ctx`."""

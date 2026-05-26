@@ -39,17 +39,21 @@ LIGHT_COLOR = "#BCB4B4"
 DARK_COLOR = "#6B6565"
 
 
+def guess_theme_mode(
+    theme: Literal["dark", "light", None] = None,
+    parent: QObject | None = None,
+) -> Literal["dark", "light"]:
+    return theme or "dark" if background_luma(parent) < 0.5 else "light"
+
+
 def to_qicon(
     icon: Icon,
-    theme: Literal["dark", "light", None] = None,
+    theme: Literal["dark", "light"],
     color: str | None = None,
-    parent: QObject | None = None,
 ) -> QIcon:
     """Create QIcon from Icon."""
     from superqt import QIconifyIcon, fonticon
 
-    if theme is None:
-        theme = "dark" if background_luma(parent) < 0.5 else "light"
     if color is None:
         # use DARK_COLOR icon for light themes and vice versa
         color = (

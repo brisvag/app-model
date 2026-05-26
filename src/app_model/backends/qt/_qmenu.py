@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 from collections.abc import Collection, Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 from qtpy.QtWidgets import QApplication, QMenu, QMenuBar, QToolBar
 
@@ -10,7 +10,7 @@ from app_model import Application
 from app_model.types import SubmenuItem
 
 from ._qaction import QCommandRuleAction, QMenuItemAction
-from ._util import ThemeEventFilter, to_qicon
+from ._util import ThemeEventFilter, guess_theme_mode, to_qicon
 
 if TYPE_CHECKING:
     from qtpy.QtWidgets import QAction, QWidget
@@ -130,6 +130,7 @@ class QModelSubmenu(QModelMenu):
     ) -> None:
         assert isinstance(submenu, SubmenuItem), f"Expected str, got {type(submenu)!r}"
         self._submenu = submenu
+        self._current_theme: Literal["dark", "light", None] = None
         super().__init__(
             menu_id=submenu.submenu, app=app, title=submenu.title, parent=parent
         )
@@ -143,9 +144,10 @@ class QModelSubmenu(QModelMenu):
 
     def _update_icon(self) -> None:
         if self._submenu.icon:
-            self.setIcon(
-                to_qicon(self._submenu.icon, theme=self._app.theme_mode, parent=self)
-            )
+            theme = guess_theme_mode(theme=self._app.theme_mode, parent=self)
+            if theme != self._current_theme:
+                self.setIcon(to_qicon(self._submenu.icon, theme=theme))
+                self._current_theme = theme
 
     def update_from_context(self, ctx: Mapping[str, object]) -> None:
         """Update the enabled state of this menu item from `ctx`."""
