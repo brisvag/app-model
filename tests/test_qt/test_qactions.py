@@ -111,6 +111,9 @@ def test_icon_follows_theme(qapp, simple_app: "Application") -> None:
     color_corner = QColor(img.pixel(1, 1))
     assert color_corner.name() != "#000000"
 
+    with pytest.raises(ValueError):
+        simple_app.theme_mode = "something"
+
 
 @pytest.mark.usefixtures("qapp")
 @pytest.mark.parametrize(
