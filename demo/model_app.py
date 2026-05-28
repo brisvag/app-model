@@ -318,6 +318,8 @@ if __name__ == "__main__":
     app = Application(name="my_app")
     for action in ACTIONS:
         app.register_action(action)
+    app.default_icon_colors = ("#E0E0E0", "#181818")
+
     qapp = QApplication.instance() or QApplication([])
     qapp.setAttribute(Qt.ApplicationAttribute.AA_DontShowIconsInMenus)
     main_win = MainWindow(app=app)

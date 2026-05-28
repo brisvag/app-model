@@ -36,15 +36,23 @@ def background_luma(qobj: QObject | None = None) -> float:
     return luma(window_bgrd.redF(), window_bgrd.greenF(), window_bgrd.blueF())
 
 
-LIGHT_COLOR = "#BCB4B4"
-DARK_COLOR = "#6B6565"
-
-
 def guess_theme_mode(
     theme: Literal["dark", "light", None] = None,
     parent: QObject | None = None,
 ) -> Literal["dark", "light"]:
     return theme or ("dark" if background_luma(parent) < 0.5 else "light")
+
+
+def pick_icon_color(
+    icon: Icon,
+    theme: Literal["dark", "light"],
+    default_colors: tuple[str, str],
+) -> str:
+    return (
+        (icon.color_dark or default_colors[0])
+        if theme == "dark"
+        else (icon.color_light or default_colors[1])
+    )
 
 
 def to_qicon(
@@ -54,14 +62,6 @@ def to_qicon(
 ) -> QIcon:
     """Create QIcon from Icon."""
     from superqt import QIconifyIcon, fonticon
-
-    if color is None:
-        # use DARK_COLOR icon for light themes and vice versa
-        color = (
-            (icon.color_dark or LIGHT_COLOR)
-            if theme == "dark"
-            else (icon.color_light or DARK_COLOR)
-        )
 
     if icn := getattr(icon, theme, ""):
         if icn.startswith("file://"):
@@ -94,7 +94,5 @@ class ThemeEventFilter(QObject):
         ):
             # delay firing slightly, so the colors can properly propagate via the
             # palette change (otherwise our icons will detect the *old* color)
-            QTimer.singleShot(
-                1, partial(self._app.theme_mode_changed, self._app.theme_mode)
-            )
+            QTimer.singleShot(1, partial(self._app.theme_changed, self._app.theme_mode))
         return False

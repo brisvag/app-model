@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import re
 import sys
 from collections.abc import Iterable, MutableMapping
 from types import MappingProxyType
@@ -88,7 +89,7 @@ class Application:
     """
 
     destroyed = Signal(str)
-    theme_mode_changed = Signal(str)
+    theme_changed = Signal(str)
     _instances: ClassVar[dict[str, Application]] = {}
 
     def __init__(
@@ -133,6 +134,7 @@ class Application:
         self._menus = menus_reg_class()
         self._keybindings = keybindings_reg_class()
         self._theme_mode: Literal["dark", "light"] | None = None
+        self._default_icon_colors: tuple[str, str] = ("#6B6565", "#BCB4B4")
 
         self.injection_store.on_unannotated_required_args = "ignore"
 
@@ -191,7 +193,28 @@ class Application:
             )
         if value != self._theme_mode:
             self._theme_mode = value
-            self.theme_mode_changed(value)
+            self.theme_changed(value)
+
+    @property
+    def default_icon_colors(self) -> tuple[str, str]:
+        """Return the default icon colors for dark and light theme as hex values."""
+        return self._default_icon_colors
+
+    @default_icon_colors.setter
+    def default_icon_colors(self, value: tuple[str, str]) -> None:
+        """Set the default icon colors for dark and light theme.
+
+        Must be a two-tuple of hex color codes (e.g: #FF0000).
+        The two colors will be used as defaults icon colors
+        for dark and light theme respectively.
+        """
+        if len(value) != 2:
+            raise ValueError("default_icon_colors must be a two-tuple of colors")
+        for v in value:
+            if not re.match(r"#[0-9a-fA-F]{6}|[0-9a-fA-F]{8}", v):
+                raise ValueError(f"default_icon_colors must be hex values, not {v}")
+        self._default_icon_colors = value
+        self.theme_changed(value)
 
     @classmethod
     def get_or_create(cls, name: str) -> Application:
